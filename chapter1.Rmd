@@ -1,7 +1,11 @@
 
-# About the project
+# Introduction to Open Data Science 2023!
 
-*Write a short description about the course and add a link to your GitHub repository here. This is an R Markdown (.Rmd) file so you should use R Markdown syntax.*
+*RStudio, GitHub & Open data sources*
+
+*Text book: Vehkalahti, Kimmo & Everitt, Brian S. (2019). Multivariate Analysis for the Behavioral Sciences , Second Edition. Chapman and Hall/CRC, Boca Raton, Florida, USA.*
+
+*My GitHub repository: https://hkallo.github.io/IODS-project/*
 
 ```{r}
 # This is a so-called "R chunk" where you can write R code.
@@ -9,5 +13,13 @@
 date()
 
 ```
-The text continues here.
+
+#Assignment 1
+
+##How are you feeling right now? 
+Feeling good, looking forward to learn new things in this course.
+##What do you expect to learn?
+I already have some experience with R statistical software and basics from statistical analysis. I expect to learn about open data sources and how to utilize them as well as about GitHub, which is completelely new thing to me. It is also nice to get a recap of basic things of stats and perhaps find new ways to execute things in R.
+##Where did you hear about the course?
+I saw an email.
 
