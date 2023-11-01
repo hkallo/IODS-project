@@ -21,5 +21,5 @@ Feeling good, looking forward to learn new things in this course.
 ##What do you expect to learn?
 I already have some experience with R statistical software and basics from statistical analysis. I expect to learn about open data sources and how to utilize them as well as about GitHub, which is completelely new thing to me. It is also nice to get a recap of basic things of stats and perhaps find new ways to execute things in R.
 ##Where did you hear about the course?
-I saw an email.
+I saw an email
 

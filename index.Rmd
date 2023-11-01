@@ -1,6 +1,6 @@
 ---
 title: "IODS course project"
-author: hkallo
+author: Henna Kallo
 output:
   html_document:
     theme: cosmo
