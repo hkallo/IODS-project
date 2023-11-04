@@ -1,25 +1,39 @@
 
-# Introduction to Open Data Science 2023!
+# Introduction to Open Data Science 2023 - course project
 
-*RStudio, GitHub & Open data sources*
+## RStudio, GitHub & Open data sources*
 
 *Text book: Vehkalahti, Kimmo & Everitt, Brian S. (2019). Multivariate Analysis for the Behavioral Sciences , Second Edition. Chapman and Hall/CRC, Boca Raton, Florida, USA.*
 
-*My GitHub repository: https://hkallo.github.io/IODS-project/*
+**My GitHub repository: https://github.com/hkallo/IODS-project**
 
+**My GitHub course diary: https://hkallo.github.io/IODS-project/**
 ```{r}
-# This is a so-called "R chunk" where you can write R code.
-
+# Date of submission
 date()
 
 ```
 
-#Assignment 1
+### Assignment 1
 
-##How are you feeling right now? 
-Feeling good, looking forward to learn new things in this course.
-##What do you expect to learn?
-I already have some experience with R statistical software and basics from statistical analysis. I expect to learn about open data sources and how to utilize them as well as about GitHub, which is completelely new thing to me. It is also nice to get a recap of basic things of stats and perhaps find new ways to execute things in R.
-##Where did you hear about the course?
-I saw an email
+**How are you feeling right now?**
+Feeling good, looking forward to learn new things in this course. R for Health Data Science is truly great, and I have already after reading first sections, learnt several new things which will make my scripts better and more consise. The book has very nice explanations for everything
+
+**What do you expect to learn?**
+I already have some experience with R statistical software and basics from statistical analysis. I expect to learn about open data sources and how to utilize them as well as about GitHub, which is completely new thing to me. It is also nice to get a recap of basic things of stats and perhaps find new ways to execute things in R.
+
+**Where did you hear about the course?**
+I saw an email.
+
+**Also reflect on your learning experiences with the R for Health Data Science book and the Exercise Set 1:**
+**How did it work as a "crash course" on modern R tools and using RStudio?**
+As I already have some knowledge of R, it was pretty easy and straightforward. However, if I had no experience with this language, I don't think I would learn too much as it is so detached from actual script writing, and nothing really had to be done yourself. The book seems very nice tool to check how to execute things in R, together with assignments better though!
+
+**Which were your favorite topics? Which topics were most difficult?**
+Favorite chapter were pipe (%<%) and several parts from Summarizing data chapter. These helped me to understand the functions that I have already used but apparently without understanding them perfectly:) It will be easier to use this in the future. I have also tried RMarkdown before but it will be nice to learn more about it. I did not know about the cheet sheets in R, that was a great tip!
+
+**Some other comments on the book and our new approach of getting started with R Markdown etc.?**
+I guess during upcoming weeks we get to do coding ourselves so no other comments:)
+
+
 
