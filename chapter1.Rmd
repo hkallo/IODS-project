@@ -1,7 +1,7 @@
 
-# Introduction to Open Data Science 2023 - course project
+# Introduction to Open Data Science - course project
 
-## RStudio, GitHub & Open data sources*
+## RStudio, GitHub & Open data sources
 
 *Text book: Vehkalahti, Kimmo & Everitt, Brian S. (2019). Multivariate Analysis for the Behavioral Sciences , Second Edition. Chapman and Hall/CRC, Boca Raton, Florida, USA.*
 
