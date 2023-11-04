@@ -8,6 +8,7 @@
 **My GitHub repository: https://github.com/hkallo/IODS-project**
 
 **My GitHub course diary: https://hkallo.github.io/IODS-project/**
+
 ```{r}
 # Date of submission
 date()
