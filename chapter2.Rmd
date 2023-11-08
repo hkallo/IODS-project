@@ -14,9 +14,11 @@ date()
 -Practised R commands and linear regression modelling with interactive Exercise2.rmd file. 
 -Wrote R script for data wrangling, visualization and analysis of learning2014-data: results describes below.
 
-###Data preparation for analysis:
+###Data wrangling: preparing dataset for analysis
 
 ```{r}
+library(tidyverse); library(dplyr); library(ggplot2); library(GGally) #load libraries
+
 data <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt", sep="\t",  header = TRUE) #upload data
 
 str(data) #exploring structure of the object
@@ -73,7 +75,7 @@ getwd() #check
 write_csv(learningAnalysis, file= "learning2014.csv") #save files
 ```
 
-
+###Data analysis: explore, analyze & interpret
 
 
 #read file into R
