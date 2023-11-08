@@ -1,4 +1,4 @@
-# Insert chapter 2 title here
+# Assignment 2: Regression and model validation
 
 *Describe the work you have done this week and summarize your learning.*
 
@@ -10,4 +10,72 @@
 date()
 ```
 
-Here we go again...
+-Reading: R for Health Data Science, chapter 7 & text book; Part II of "MABS4IODS" (chapters 3 & 4).
+-Practised R commands and linear regression modelling with interactive Exercise2.rmd file. 
+-Wrote R script for data wrangling, visualization and analysis of learning2014-data: results describes below.
+
+###Data preparation for analysis:
+
+```{r}
+data <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt", sep="\t",  header = TRUE) #upload data
+
+str(data) #exploring structure of the object
+
+dim(data) #explore dimensions of the data
+
+```
+
+We have a dataframe, in which all but one variable is integer type, and remaining one, gender, is character type. There are 183 observations/variable, total 60 variables.
+
+###Create the dataset for analysis containing only needed information: gender, age, attitude, deep, stratergic and surface level questions as well as points. The attitude score is scaled back to the original scale (division by 10), and average the answers of selected questions by taking means.
+```{r}
+learningAnalysis <- data %>%
+  select(gender, Age, Attitude, Points)
+
+#find variables deep, stra and surf
+deep <- data %>%
+  select(starts_with("D"))
+surf <- data %>%
+  select(starts_with("SU"))
+stra <- data %>%
+  select(starts_with("ST"))
+
+#and save mean of theses variables in the analysis datasets
+learningAnalysis$deep <- rowMeans(deep)
+learningAnalysis$stra <- rowMeans(stra)
+learningAnalysis$surf <- rowMeans(surf)
+
+#scale the combination variable Attitude back to the 1-5 scale by dividing with 10
+learningAnalysis$attitude <- learningAnalysis$Attitude / 10
+learningAnalysis <- subset(learningAnalysis, select = -Attitude)
+
+colnames(learningAnalysis) #check the column names and convert if needed
+colnames(learningAnalysis)[2] <- "age"
+colnames(learningAnalysis)[3] <- "points"
+colnames(learningAnalysis)
+
+# include only the rows where points > 0
+learningAnalysis <- filter(learningAnalysis, points>0)
+
+#last check
+str(learningAnalysis)
+head(learningAnalysis)
+
+```
+
+Now we have dataframe prepared for the subsequent analysis. Let's save the file to the IODS Project folder.
+
+```{r}
+#set working directory to the IODS project folder
+setwd("C:/Users/Henna/Desktop/IODS/IODS-project")
+getwd() #check
+
+write_csv(learningAnalysis, file= "learning2014.csv") #save files
+```
+
+
+
+
+#read file into R
+
+readFile <- read.csv("learning2014.csv", header=TRUE) #no need to specify path if working directory is set to the folder where file is located
