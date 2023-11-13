@@ -1,63 +1,66 @@
 # Assignment 2: Regression and model validation
 
-*Describe the work you have done this week and summarize your learning.*
+#### Name: Henna Kallo
+#### Date: 13.11.2023
 
-- Describe your work and results clearly. 
-- Assume the reader has an introductory course level understanding of writing and reading R code as well as statistical methods.
-- Assume the reader has no previous knowledge of your data or the more advanced methods you are using.
+#### In this exercise we learn to perform data wrangling and linear regression analysis!
+
+* Data source:http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt
+* Literature: R for Health Data Science, chapter 7 & text book; Part II of "MABS4IODS" (chapters 3 & 4).
 
 ```{r}
+#Assignment submitted
 date()
 ```
 
--Reading: R for Health Data Science, chapter 7 & text book; Part II of "MABS4IODS" (chapters 3 & 4).
--Practised R commands and linear regression modelling with interactive Exercise2.rmd file. 
--Wrote R script for data wrangling, visualization and analysis of learning2014-data: results describes below.
+### Data wrangling: preparing dataset for analysis
 
-###Data wrangling: preparing dataset for analysis
+```{r results='hide', error=FALSE, message=FALSE, warning=FALSE}
 
-```{r}
 library(tidyverse); library(dplyr); library(ggplot2); library(GGally) #load libraries
 
-data <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt", sep="\t",  header = TRUE) #upload data
+data <- read.table("http://www.helsinki.fi/~kvehkala/JYTmooc/JYTOPKYS3-data.txt", sep="\t",  header = TRUE) #data upload
 
-str(data) #exploring structure of the object
-
-dim(data) #explore dimensions of the data
-
+str(data) #structure of the object
+dim(data) #dimensions of the data
 ```
 
-We have a dataframe, in which all but one variable is integer type, and remaining one, gender, is character type. There are 183 observations/variable, total 60 variables.
+Next we will create a new dataset for analysis containing only needed information: gender, age, attitude, deep, stratergic and surface level question scores, and points.
 
-###Create the dataset for analysis containing only needed information: gender, age, attitude, deep, stratergic and surface level questions as well as points. The attitude score is scaled back to the original scale (division by 10), and average the answers of selected questions by taking means.
-```{r}
+```{r results='hide', error=FALSE, message=FALSE, warning=FALSE}
+#save the variables ready in the original data frame to the new analysis data frame
 learningAnalysis <- data %>%
   select(gender, Age, Attitude, Points)
 
-#find variables deep, stra and surf
+#find combination variables (deep, strategic and surface level questions) and save each on their own variable
 deep <- data %>%
-  select(starts_with("D"))
+  select(starts_with("D")) #NB! Excess amount of columns selected! With the next line we include only the deep question columns.
+deep <- deep[,1:12]
+
 surf <- data %>%
   select(starts_with("SU"))
+
 stra <- data %>%
   select(starts_with("ST"))
 
-#and save mean of theses variables in the analysis datasets
+#averaging the answers of selected questions and saving them to the analysis dataset
 learningAnalysis$deep <- rowMeans(deep)
 learningAnalysis$stra <- rowMeans(stra)
 learningAnalysis$surf <- rowMeans(surf)
 
-#scale the combination variable Attitude back to the 1-5 scale by dividing with 10
+#scale the combination variable Attitude back to the 1-5 scale by dividing with 10, and delete the old variable
 learningAnalysis$attitude <- learningAnalysis$Attitude / 10
 learningAnalysis <- subset(learningAnalysis, select = -Attitude)
 
 colnames(learningAnalysis) #check the column names and convert if needed
 colnames(learningAnalysis)[2] <- "age"
 colnames(learningAnalysis)[3] <- "points"
-colnames(learningAnalysis)
 
-# include only the rows where points > 0
-learningAnalysis <- filter(learningAnalysis, points>0)
+learningAnalysis <- filter(learningAnalysis, points>0) #include only the rows where points > 0
+
+#reorder the columns:
+learningAnalysis <- learningAnalysis %>%
+  select(gender, age, attitude, deep, stra, surf, points)
 
 #last check
 str(learningAnalysis)
@@ -67,17 +70,175 @@ head(learningAnalysis)
 
 Now we have dataframe prepared for the subsequent analysis. Let's save the file to the IODS Project folder.
 
-```{r}
-#set working directory to the IODS project folder
-setwd("C:/Users/Henna/Desktop/IODS/IODS-project")
-getwd() #check
+```{r results='hide', error=FALSE, message=FALSE, warning=FALSE}
 
-write_csv(learningAnalysis, file= "learning2014.csv") #save files
+setwd("C:/Users/Henna/Desktop/IODS/IODS-project") #set working directory to the IODS project folder
+getwd() #check that it worked
+
+write_csv(learningAnalysis, file= "learning2014.csv") #save file as csv
 ```
 
-###Data analysis: explore, analyze & interpret
+### Data analysis: explore, analyze & interpret
+
+#### Summary of the dataset
+```{r error=FALSE, message=FALSE, warning=FALSE}
+setwd("C:/Users/Henna/Desktop/IODS/IODS-project") #set working directory
+
+learningAnalysis <- read.csv("learning2014.csv", header=TRUE) #read file into R
+
+str(learningAnalysis) #structure of the data frame
+
+head(learningAnalysis) #first rows of the data frame
+
+summary(learningAnalysis) #summary of the variables
+
+```
 
 
-#read file into R
+**Data description:**
 
-readFile <- read.csv("learning2014.csv", header=TRUE) #no need to specify path if working directory is set to the folder where file is located
+* Research question: Does students' gender/age/attitude/question scores impact the success in the course completion (gained points)? This is measured with several different level (deep, strategic, surface) questions. Set of questions are used to quantify attitude on scale 1-5. Points represent the points that students have gained from the course. The data also includes information of students age and gender.
+
+* Data frame structure: There are 166 observations in each variable. There are total 7 variables: gender (character), age (integer), attitude (numeric), deep (numeric), strategic (numeric) and surface (numeric) level questions, and points (integer).
+
+* The summary table above describes summaries of variables: min, max, mean, median and 1st and 3rd quartiles.
+
+  + There are 110 females and 56 men in this study.
+  
+  + The students are aged from 17 up to 55.
+  
+  + Attitude scores gained range between 1.4-5.0, average being 3.14.
+  
+  + The mean scores of deep, strategic and surface questions are 3.68, 3.12 and 2.79, respectively.
+  
+  + Minimum points gained is 7.00, maximum points 33. Average of points is 22.72. 50% of all scores fit to the range 19.0-27.75 points.
+
+
+#### Linear regression analysis: Is there association/ dependency between points (dependent variable) and age/attitude/deep/stra/surf (explanatory) variables?
+
+To test this, we will perform regression analysis, which is a statistical method that describes the relationship between two or more variables.
+
+**Graphical overview of the data:**
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+#Function for adding correlation panel
+panel.cor <- function(x, y, ...){
+  usr <- par("usr"); on.exit(par(usr))
+  par(usr = c(0, 1, 0, 1))
+  r <- round(cor(x, y), digits=2)
+  txt <- paste0("R = ", r)
+  cex.cor <- 0.8/strwidth(txt) #if want to adjust text size based on R value
+  text(0.5, 0.5, txt, cex = 1)} #if adjusting; cex=cex.cor
+
+#Function for adding regression line
+upper_panel_regression_line = function(x,y, ...){
+  points(x,y,...)
+  linear_regression = lm(y~x)
+  linear_regression_line = abline(linear_regression)}
+
+my_cols <- c("#00AFBB", "#E7B800") #set colors
+
+learningAnalysis$gender<-as.factor(learningAnalysis$gender) #for being able to change color, convert gender to factor type
+
+#Visualization with a scatter plot + regression line matrix, add R values to the lower side of the matrix.
+pairs(learningAnalysis[-1], col = my_cols[learningAnalysis$gender],
+      lower.panel = panel.cor , upper.panel = upper_panel_regression_line)
+
+```
+
+Scatter plot shows the distribution of the observations (female turquoise, male yellow). Regression lines give some indication whether there is or isn't an association between two variables. For instance, there seems to be positive dependency between the attitude and points: line goes upwards and it is steeper than any other line. Also, R-value (correlation coefficient) for points vs. attitude is 0,44, suggesting positive correlation between these variables. If the slope is (close to) horizontal and R is (close to) zero, it means that there is no association between the variables. This kind of case is for example between deep and points variables. Then again, if R-value is negative and the slope of regression line is negative (line goes downhill), like between surf and points variables, the association is negative. This means that when the surface question gets higher value, the points are more likely lower. Thus, with this kind of modelling we can also predict the success at the course based on the answers to the preliminary questions. Better explanation of R-values and their meaning comes after the next figure.
+
+Let's check if analysis executed separately in male and female reveals differences in association of the variables.
+```{r error=FALSE, message=FALSE, warning=FALSE}
+# create a more advanced plot matrix with ggpairs()
+ggpairs(learningAnalysis, mapping = aes(col = gender, alpha = 0.3), 
+        lower = list(combo = wrap("facethist", bins = 20)))
+```
+
+Let's go through the figure. Red = women, Blue = men.
+
+There are about two times more women in this study.
+
+The boxplots reveal that the median age of women is a bit lower than that for men. Also, women median score of attitude is a bit lower. Strategic & surface question scores in turn are slightly higher in women.
+
+Also density plots reveal the same. They also show that distribution of attitude and surface question scores are quite different in male and female. Density plots of age reveal that the data is right skewed. This means that there are more young participants than older ones. Age, Stra and surf have clearly unimodal distribution (=only one peak). Other variables have 1-2 peaks, sometimes depending on the gender. The scatter plot also shows the distribution of values. The same applies with the histograms. The clearest way to make conclusions from the distributions is still with the density plot.
+
+As we are focused on studying the causal relationship between dependent variable ´points´ and explanatory variables age, attitude, deep, stra and surf, let's focus on right most column of correlation coefficient values (measures linear correlation between two sets of data). This article presents the rule of thumb (Mukaka, 2012; https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3576830/) how to interpret different coefficient values. The strongest association is between attitude and points. This association is strong also in both genders separately. Interstingly, age seems to have stronger association with points in men than in women. This assocation is negative, meaning that older age is associated with lower scores. The next biggest impact seems to be with stra and surf variables, but their coefficients are already quite low and not statistically significant.
+
+
+**Multiple regression model**
+
+Now we select 3 explanatory variables to explain dependent variable "points". This selection is based on the slopes of regression lines and R values in the figures above. The 3 highest absolute R values are selected: attitude (R=0.44), stra (R=0.15) and surf (R=-0.14) (genders not separated in the analysis).
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+#Multiple regression analysis
+# create a regression model with multiple explanatory variables
+my_model<- lm(points ~ attitude + stra + surf, data = learningAnalysis)
+
+# print out a summary of the model
+summary(my_model)
+
+```
+
+P-value of the F-statistic is 3.156e-08, which is highly significant. This means that at least one of the predictor variables (attitude, stra, surf) is significantly related to outcome variable.
+
+To identify which predictor variables are significant, let's examine the coefficients table, which shows the estimate of regression beta coefficients and the associated t-statistic p-values. Attitude is significantly associated with points whereas variables stra and surf show no association. Thus, we can remove these to variables from the model. Coefficient b for attitude is ~3.40, meaning that this is the average effect on our dependent variable (points) when the predictor (attitude) increases with one unit and all the other predictors do not change.
+
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+my_model_attitude<- lm(points ~ attitude, data = learningAnalysis)
+
+# print out a summary of the model
+summary(my_model_attitude)
+```
+P-value of F-statistics is significant (4.119e-09), and the model tells that when attitude grows with 1 unit, points increase about 3.5 on average. The final equation would be: points = 11.6 + attitude*3.5.
+
+Out of curiosity, before proceeding to quality assessment, let's check if age should be included in the model when analyzing only explanatory variables of points in men.
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+menstudents <- learningAnalysis %>%
+  filter(gender=="M")
+
+my_model_men<- lm(points ~ attitude + age, data = menstudents)
+
+summary(my_model_men) #summary of the model
+
+```
+Interestingly, this analysis indicates that age might be associated (negatively) with points in men: the older the men, the less points. P-value 0.06 is very close to statistical significance (p<0.05). However, let's not continue further with this dataset but rather analyse both men and women together.
+
+
+**Quality assessment**
+
+Finally, we should perform quality assessment of the model, based on R-squared (R2) and Residual Standard Error (RSE). R2 is sensitive for the number of variables included in the model and it is adjusted to correct for the number of explanatory variables included in the prediction model. The adjusted R2 = 0.1856, meaning that “~19% of the variance in the measure of points can be predicted by attitude score. If we compare the adjusted R2 value to the previous model where we had 3 predictor variables, the values are not very different, meaning that having 3 predictors in the model did not improve the quality of the model.
+
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+#error rate
+summary(my_model_attitude)$sigma/mean(learningAnalysis$points)
+```
+The RSE estimate gives a measure of error of prediction. The lower the RSE, the more accurate the model is. Here we calculated the error rate by dividing the RSE by the mean of outcome variable. Thus, RSE 5.32 is corresponding to 23% error rate.
+
+  + More info: https://www.analysisinn.com/post/the-meaning-of-r-r-square-adjusted-r-square-r-square-change-and-f-change-in-a-regression-analysis/
+
+Last thing to do is to graphically explore the validity of our model assumptions by Residuals vs Fitted values, Normal QQ-plot and Residuals vs Leverage plot. Residual is the difference between the observed value and the mean value that the model predicts for that observation.
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+# draw diagnostic plots using the plot() function
+par(mfrow = c(2,2))
+plot(my_model_attitude, which=c(1,2,5))
+par(mfrow = c(1, 1)) #reset plotting matrix: 
+
+```
+
+* Residuals vs Fitted values plot: detect unequal error variances, non-linearity, and outliers.
+  + On the right end of x axis, there is some indication of heteroskedasticity: the spread of the residuals seems decreasing. However, the variance of the residuals seems otherwise somewhat even, so I conclude that this is ok amount of variation.
+  + The horizontal band (red line) is formed around the zero line. Thus, it is reasonable to assume linear relationship.
+  + There are 3 outliers. One option would be to further evaluate if (some of) these three observations should be removed from the analysis.
+
+* Normal QQ-plot: provide an indication of univariate normality of the dataset.
+  + From the figure we observe that the normal probability plot of the residuals is approximately linear supporting the condition that the error terms are normally distributed.
+
+* Residuals vs Leverage plot: identify influential data points on the model.
+  + There are three data points highlighted; one of them raised already in two previous plots as outlier. It might be good idea to further study the influence of these observations on the slope of the regression line (https://rpubs.com/Amrabdelhamed611/669768). However, as the points are not flagged by the Cook's distance, they are most likely not too influental, and thus can be included in the analysis.
+
+**Conclusion: The final course points of the students are positively associated with the attitude scores based on the preliminary question asked before the course:  the higher attitude score, the more points. Only one explanatory variable is included in the model as rest were not reaching significance. Quality assessment reavealed that our model is reliable.**
