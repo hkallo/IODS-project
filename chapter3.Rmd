@@ -5,12 +5,6 @@
 
 #### In this exercise we learn to perform data wrangling and linear regression analysis!
 
----
-title: "chapter3.Rmd"
-author: "Henna Kallo"
-date: "2023-11-13"
-output: html_document
----
 
 We are exploring data from two questionnaires related to student performance in secondary education of two Portuguese schools. The data includes student grades, demographic, social and school related variables. Here we have combined data sets of Mathematics and Portuguese language subjects.
 
