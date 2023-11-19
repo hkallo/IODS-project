@@ -1,0 +1,245 @@
+# Assignment 3: Logistic regression
+
+#### Name: Henna Kallo
+#### Date: 18.11.2023
+
+#### In this exercise we learn to perform data wrangling and linear regression analysis!
+
+---
+title: "chapter3.Rmd"
+author: "Henna Kallo"
+date: "2023-11-13"
+output: html_document
+---
+
+We are exploring data from two questionnaires related to student performance in secondary education of two Portuguese schools. The data includes student grades, demographic, social and school related variables. Here we have combined data sets of Mathematics and Portuguese language subjects.
+
+Here we study the relationships between alcohol consumption with selected variables.
+
+Data source: http://www.archive.ics.uci.edu/dataset/320/student+performance
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+
+#import data
+library(readr)
+alc<-read_csv("C:/Users/Henna/Desktop/IODS/IODS-project/student_performance_alcohol.csv") 
+alc<-as.data.frame(alc);
+
+colnames(alc) #column names
+str(alc) #structure of the dataset
+
+```
+All the variables listed. The variables not used for joining the two data have been combined by averaging (including the grade variables). Alcohol use ('alc_use') is the average of workday and weekend alcohol consumption. If average is higher than 2, alcohol consumption is considered 'high use'. Rest of the variables are describes in the website (link given above).
+
+We have 370 obsrevations and 35 variables in the dataframe. There are character, numerical and logistic type of variables.
+
+Next we select 4 intersting variables to further study their relationship with the alcohol consumption. Let's visualize the variables:
+```{r error=FALSE, message=FALSE, warning=FALSE, fig.width=8, fig.height=10}
+library(tidyr); library(ggplot2); library(dplyr);
+gather(alc) %>% ggplot(aes(value))  + 
+  facet_wrap("key", scales = "free") + 
+  geom_bar(fill="#00AFBB") +
+  ggtitle("Barplots of all variables")
+```
+
+Below are listed the chosen 4 factors, brief description of variable, and expected relationship with alcohol consumption
+
+* Goout
+  + going out with friends, scoring 1-5
+  + hypothesis: there is a positive relationship between 'goout' and 'high_use': higher value of the goout is linked with heavier alcohol consumption.
+
+* Absences
+  + number of school absences
+  + hypothesis: there is a positive relationship between 'absences' and 'high_use': higher value of absences is linked with heavier alcohol consumption.
+
+* Failures
+  + number of past class failures
+  + hypothesis: there is a positive relationship between 'failures' and 'high_use': higher value of failures is linked with heavier alcohol consumption.
+
+* Romantic
+  + with a romantic relationship (binary: yes or no)
+  + hypothesis: there might be an association between variables 'romantic' and 'high_use': single status linked with high_use=TRUE. 
+
+Next we will see whether we can find support for our hypotheses with numerical and graphical exploration of data:
+
+Density or frequency plots (depending on the variable), as well as cross-tabulations and plots to visualize
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+ggplot(alc, aes(x=goout)) +
+  geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) +
+  ggtitle("GoOut distribution") +
+  theme_classic()
+
+# create cross-tabulations and plots to visualize
+library(sjPlot)
+
+tab_xtab(var.row = alc$goout, var.col = alc$high_use, title = "Cross-Tab of GoOut & High alcohol consumption", show.row.prc = TRUE)
+plot_xtab(alc$goout, alc$high_use, margin = "row", bar.pos = "stack", coord.flip = TRUE)
+```
+
+Density plot shown that most of the students get 'goout' scoring 2-4. Cross-tabulation shows that the bigger is the 'goout' score, the bigger proportion there is of observations with high_use=TRUE. This indicates that our hypothesis was correct: higher value of the goout is linked with heavier alcohol consumption.
+
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+
+ggplot(alc, aes(x=absences)) +
+  geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) +
+  ggtitle("Absences distribution") +
+  theme_classic()
+
+tab_xtab(var.row = alc$absences, var.col = alc$high_use, title = "Cross-Tab of Absences & High alcohol consumption", show.row.prc = TRUE)
+plot_xtab(alc$absences, alc$high_use, margin = "row", bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+Density plot shown that most of the student have absence score zero (right skewed). Cross-tabulation shows that the more absences there are, the bigger proportion tend to have higher alcohol consumption. This indicates that our hypothesis was correct: higher number of absences is linked with heavier alcohol consumption.
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+ggplot(alc, aes(x=failures)) +
+  geom_density(fill="#69b3a2", color="#e9ecef", alpha=0.8) +
+  ggtitle("Failures distribution") +
+  theme_classic()
+
+tab_xtab(var.row = alc$failures, var.col = alc$high_use, title = "Cross-Tab of failures & High alcohol consumption", show.row.prc = TRUE)
+plot_xtab(alc$failures, alc$high_use, margin = "row", bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+Also the density plot of failures is right skewed, meaning that most of the student pass the class Cross-tabulation shows that higher number of failures is linked with the bigger proportion of high alcohol consumption. This indicates that our hypothesis was correct: higher value of failures is linked with increase in heavy alcohol consumption.
+
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+ggplot(alc, aes(x=romantic)) +
+  geom_bar(fill="#69b3a2", color="#e9ecef", alpha=0.8) +
+  ggtitle("Romantic relationship status frequencies") +
+  theme_classic()
+
+tab_xtab(var.row = alc$romantic, var.col = alc$high_use, title = "Cross-Tab of Romantic relationship status & High alcohol consumption", show.row.prc = TRUE)
+plot_xtab(alc$romantic, alc$high_use, margin = "row", bar.pos = "stack", coord.flip = TRUE)
+
+```
+
+The frequency table shows that there is about 1/3 of students in romantic relationship whereas ~2/3 are with single status. Cross-tabulation indicates that even though there is slightly bigger percentage of single + high alc use students, this difference is most likely not statistically meaningful. Thus, this results does not support our hypothesis stating 'there might be an association between variables 'romantic' and 'high_use''.
+
+We are interested whether the alcohol consumption has an association with the chosen set of characteristics of the students. Binary logistic regression can tell us the probability of this. We choose binary logistic regression because the outcome variable, 'high_use', has two level (TRUE/FALSE). Explanatory variables can be other types as well.
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+#binary logistic regression
+m <- glm(high_use ~ failures + absences + goout + romantic, data = alc, family = "binomial")
+
+summary(m) # a summary of the model
+
+```
+
+Let's go through the output:
+
+First we have the distribution of the deviance residuals.
+
+The next we get the coefficients, their standard errors, the z-statistic, and the associated p-values. Failures, absences and goout are statistically significant. Variable 'romantic' is non-significant.
+
+The logistic regression coefficients give the change in the log odds of the outcome (high_use) for a one unit increase in the predictor variable:
+  + for every one unit change in failures, the log odds of high_use=yes increases by 0.56.
+  + for every one unit change in absences, the log odds of high_use=yes increases by 0.08.
+  + for every one unit change in goout, the log odds of high_use=yes increases by 0.71.
+
+
+From the results we can construct the logistic regression equation (leave out statistically non-significant variable):
+
+log(odds[high_use=yes]) = -3.55115 + 0.56492 * failures + 0.07762 * absences + 0.70634 * goout
+
+
+
+Next we will compute the odds ratios (OR) and confidence intervalss (CI):
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+
+coef(m) # the coefficients of the model
+
+OR <- coef(m) %>% exp # compute odds ratios (OR)
+
+CI <-  confint(m) %>% exp # compute confidence intervals (CI)
+
+cbind(OR, CI) # print out the odds ratios with their confidence intervals
+
+```
+We can conclude the following:
+- for one unit increase in failures, the odds of having high alcohol consumption increases by factor of 1.76. (the outcome is 76% more likely)
+- for one unit increase in absences, the odds of having high alcohol consumption increases by factor of 1.08. (the outcome is 8% more likely)
+- for one unit increase in goout, the odds of having high alcohol consumption increases by factor of 2.03. (there is a doubling of the odds of the outcome)
+
+CI is used to estimate the precision of the OR. A large CI indicates a low level of precision of the OR, whereas a small CI indicates a higher precision of the OR.
+
+These results support our hypotheses of the effects of failures, absences and goouts, but not about the effect of romantic relationship status.
+
+
+Next, we will explore the predictive power of the model. We will include only the statistically significant variables: failures, absences & goout.
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+
+m_pred <- glm(high_use ~ failures + absences + goout, data = alc, family = "binomial")
+
+probabilities <- predict(m_pred, type = "response") # predict the probability of high_use
+
+alc <- mutate(alc, probability = probabilities) # add the predicted probabilities to 'alc'
+
+alc <- mutate(alc, prediction = probability > 0.5) # use the probabilities to make a prediction of high_use
+
+# see the last ten original classes, predicted probabilities, and class predictions
+select(alc, failures, absences, goout, high_use, probability, prediction) %>% tail(10)
+
+table(high_use = alc$high_use, prediction = alc$prediction) # tabulate the target variable versus the predictions
+
+ggplot(alc, aes(x = probability, y = high_use, col = prediction))+ #plot of 'high_use' versus 'probability' in 'alc'
+  geom_point()+
+  ggtitle("Plotted confusion matrix results ")
+
+
+```
+
+The printout of the dataframe shows the new columns; predicted probabilities and prediction of high_use.
+
+A confusion matrix visualizes and summarizes the performance of a classification algorithm:
+  + true negatives: 237
+  + true positives: 45
+  + false positives (type I error): 22
+  + false negatives (type II error): 66
+  
+
+Next, let's compute the average number of incorrect predictions. The mean of incorrectly classified observations can be thought of as a penalty (loss) function for the classifier. Less penalty = good.
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+
+table(high_use = alc$high_use, prediction = alc$prediction) %>% # tabulate the target variable versus the predictions
+  prop.table() %>%
+  addmargins()
+
+loss_func <- function(class, prob) { # define a loss function (mean prediction error)
+  n_wrong <- abs(class - prob) > 0.5
+  mean(n_wrong)
+}
+
+loss_func(class = alc$high_use, prob = alc$probability) #compute the average number of wrong predictions in the (training) data
+
+```
+This analysis revealed that the average number of wrong predictions is ~24%.
+
+Now we continue to the 10-fold cross-validation of the model
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+
+# K-fold cross-validation
+library(boot)
+#trainingdata
+cv_train <- cv.glm(data = alc, cost = loss_func, glmfit = m_pred, K = nrow(alc))
+
+#testingdata
+cv_test <- cv.glm(data = alc, cost = loss_func, glmfit = m_pred, K = 10)
+
+# average number of wrong predictions
+cv_train$delta[1]
+
+cv_test$delta[1]
+
+
+```
+The comparison of the average number of the wrong predictions in training and testing sets, we see that the error is about the same. The error is slightly smaller than in the exercise set, meaning that including failures, absences and goouts is a bit better model to predict the alcohol use than what was used in the exercise set.
