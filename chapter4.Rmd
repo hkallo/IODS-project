@@ -1,0 +1,357 @@
+# Assignment 4: Clustering & Classification
+
+#### Name: Henna Kallo
+#### Date: 23.11.2023
+
+#### In this exercise we learn data clustering and classification
+
+* Data source: MASS package in R: https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html
+
+* Literature: Part IV of "MABS4IODS" (chapters 12, 17 & 18)
+
+* Important concepts:
+  + Classification: organizing a large, complex set of multivariate data. Objects are sorted into a small number of homogeneous groups or clusters.
+  + Multivariate data: several measurements or observations are made on each sampling unit, and they are considered simultaneously to reveal the patterns or so. No division to explanatory and dependent variables.
+
+```{r results='hide', error=FALSE, message=FALSE, warning=FALSE}
+
+library(MASS); library(tidyr); library(corrplot); library(dplyr); library(ggplot2) #load libraries
+rm(list=ls())
+data("Boston") #load the data
+
+```
+
+Let's take a look of the Boston data:
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+
+str(Boston) #structure of the dataset
+
+```
+
+* Boston dataset consists multivariate data of Housing values in suburdbs of Boston. The data frame has 506 rows and 14 variables. All variables are numeric type. Brief description of the variables:
+  + crim: crime rates
+  + zn: proportions of residental land zoned for lots over 25000 sq. ft.
+  + indus: proportion of other than retail business acres
+  + chas: next to Charles River, or not
+  + nox: pollution; nitrogen oxides
+  + rm: number of rooms per apartment
+  + age: proportion of owner-occupied units built before 1940
+  + dis: distances to the employment centres (weighted mean)
+  + rad: access to radial highways
+  + tax: full-value property-tax rate
+  + ptratio: student/teacher ratio
+  + black: 1000(Bk−0.63)^2 where Bk is the proportion of blacks by town. 
+  + lstat: lower status of the population (%)
+  + medv: median value of owner-occupied homes in $1000s
+
+With this data set we can explore connections between economical, environmental, societal and cultural features.
+
+The descriptions of the variables are listed in here: https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/Boston.html.
+
+Let's explore the summary statistics of the multivariate Boston data:
+
+-- each of the variables separately
+
+-- relationships between the variables (correlations)
+
+```{r error=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=10}
+
+summary(Boston) #summary of each variable separately
+
+```
+
+* Some interesting points:
+  + Mean crime rate is 3.61 per capita. Variation is very large as min rate is almost 0, whereas maximum crime rate is close to 90 crimes per capita.
+  + Nitrogen oxygen concentration vary from 0.39 to 0.87 part per 10 million.
+  + Average number of rooms in apartment is about 6, but it varies from 3,5 to almost 9.
+  + On average, almost 70% of owner-occupied units are built before 1940. However, there's lots of variability.
+  + full-value property-tax rate varies from 187 to 711 (pe $10000)
+  + There are on average 19 students per teacher.
+  + The amount of blacks varies a lot but their proportion is relatively high on most of the regions.
+  + Lower status of the population varies between 1,73-37,97%. On average, a bit more than 20% have lower status.
+  + Mean of the median values of owner occupied homes is 22530$.
+
+
+The scatterplot of each variable-combination can be use as the first indicative visualization of associations between the variables. In addition to this, we print an illustrative correlation matrix visualization, which presents us nicely how strong is the association between the variable-pairs, and whether the association is positive or negative.
+
+```{r error=FALSE, message=FALSE, warning=FALSE, fig.width=12, fig.height=10}
+
+pairs(Boston,
+      col = "cornflowerblue",
+      main = "Scatterplots for each variable-combination of Boston data frame")
+
+cor_matrix <- cor(Boston) %>% #correlation matrix
+  round(digits=2)
+
+corrplot(cor_matrix, method="circle", type="upper", cl.pos = "b", tl.pos = "d", tl.cex = 0.6) ##visualize the correlations
+
+
+```
+
+
+The crime rate seems to be slightly positively associated with proportion of owner-occupied units built prior to 1940 and lower status of the population. Also, as accessibility to radial highways gets better and  property-tax rate increases, the crime rates per capita increases.
+
+Not that surprisingly, there is an association between industry and nitrogen oxygen levels. Moreover, higher nitrogen oxygen concentration seems to be associated with higher proportion of owner-occupied units built prior to 1940 & lower population status. The scatterplot indicates that the air pollution concentration and industry variables are in turn negatively associated with the distance to the Boston employment centres and median value of owner-occupied homes.
+
+Lower number of rooms/apartment seems to be linked with lower population status. As expected, average number of rooms is positively associated with the median value of owner occupied homes. Lower status of the population is clearly linked with reduced median value of owner-occupied homes.
+
+Moreover, there is a negative association between proportion of owner-occupied unit built prior to 1940 with distance to employment centres, and a positive correlation between the accessibility to radial highways and full-value property-tax rate per $10000.
+
+The variables are on very different scales. We will make them more comparable by standardizing the dataset.
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+
+boston_scaled <- scale(Boston) # center and standardize variables
+
+summary(boston_scaled) # summaries of the scaled variables
+
+```
+When scaling the data, we subtract the column means from the corresponding columns and divide the difference with standard deviation. This is why the mean is 0 in all of the variables. After scaling (centering & standardizing) we can better compare the variables with each other. This website briefly lists the cons of centering and scaling the variables: https://www.goldsteinepi.com/blog/thewhyandwhenofcenteringcontinuouspredictorsinregressionmodeling/index.html
+
+#### Classification
+
+##### Linear discriminant analysis
+
+"A further question that is often of interest for grouped multivariate data is whether or not it is possible to use the measurements made to construct a classification rule derived from the original observations (the training set) that will allow new individuals having the same set of measurements (the test sample)." -Part IV of "MABS4IODS" -> discriminant function analysis (chapter 18)
+
+Now will perform linear discriminant analysis: the idea is to find a linear combination of features that characterizes or separates two or more classes of objects or events. When we want to use a statistical method to predict something, it is important to have data to test how well the predictions fit. Splitting the original data to test and train sets allows us to check how well our model works. 
+
+Our target variable is crime rate per capita by town. Rest of the variables are predictor variables. Our interest lies in deriving a classification rule that could use measurements of the predictor variables to be able to identify the individual's placement on the categories of crim variable.
+
+We start with converting the crim variable to categorical and dividing the data into four categories: low, med_low, med_high and high crime rates per capita.
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+
+class(boston_scaled) # class of the boston_scaled object
+
+boston_scaled<-as.data.frame(boston_scaled) # change the object to data frame
+
+#Create a factor variable from numerical: binning by quantiles; variable `crim` (per capita crime rate by town)
+
+summary(boston_scaled$crim) #summary
+
+bins<-quantile(boston_scaled$crim) #save quantiles, bin limits, in 'bins'
+bins
+
+# create a categorical variable 'crime'
+crime <- cut(boston_scaled$crim, breaks = bins, include.lowest = TRUE, label=c("low", "med_low", "med_high", "high"))
+
+# look at the table of the new factor crime
+table(crime)
+
+# remove original crim from the dataset
+boston_scaled <- dplyr::select(boston_scaled, -crim)
+
+# add the new categorical value to scaled data
+boston_scaled <- data.frame(boston_scaled, crime)
+```
+
+Next we'll divide the data into train (80% of the data) and test sets.
+
+```{r results='hide', error=FALSE, message=FALSE, warning=FALSE}
+
+# number of rows in the Boston dataset 
+n <- nrow(boston_scaled)
+
+# choose randomly 80% of the rows
+ind <- sample(n,  size = n * 0.8)
+
+# create train set
+train <- boston_scaled[ind,]
+
+# create test set 
+test <- boston_scaled[-ind,]
+
+# save the correct classes from test data; save for later to calculate how well the model performed in prediction
+correct_classes <- test$crime
+
+# remove the crime variable from test data
+test <- dplyr::select(test, -crime)
+```
+
+And finally perform the analysis and plot the results:
+
+```{r error=FALSE, message=FALSE, warning=FALSE,  fig.width=10, fig.height=10}
+
+set.seed(123)
+lda.fit <- lda(crime~., data = train)
+
+lda.fit # print the lda.fit object
+
+# the function for lda biplot arrows
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  graphics::arrows(x0 = 0, y0 = 0, 
+                   x1 = myscale * heads[,choices[1]], 
+                   y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# target classes as numeric
+classes <- as.numeric(train$crime)
+
+# plot the lda results
+plot(lda.fit, dimen = 2, col=classes, pch = classes)
+lda.arrows(lda.fit, myscale = 1.2)
+
+```
+
+* The biplot:
+  + The cosine of the angle between a vector and an axis indicates the importance of the contribution of the corresponding variable to the principal component
+  + variables are shown as arrows from the origin and observations are shown as points. The configuration of arrows reflects the relations of the variables. The cosine of the angle between the arrows reflects the correlation between the variables they represent. The most influential linear separators for the clusters are zn, rad & nox.
+
+Next, we use predict() to classify the LDA-transformed testing data. Finally, we calculate the accuracy of the LDA model by comparing the predicted classes with the true classes.
+
+```{r error=FALSE, message=FALSE, warning=FALSE}
+
+# predict classes with test data
+lda.pred <- predict(lda.fit, newdata = test)
+
+# cross tabulate the results
+table(correct = correct_classes, predicted = lda.pred$class)
+
+```
+
+Let's calculate the accuracy of the prediction: (15+15+19+31)/102 * 100% = ~78% of the predictions are correct ( ~22% of observations are misclassified). 
+
+
+##### Clustering
+
+Cluster analysis is a generic term for a wide range of numerical methods with the common goal of uncovering or discovering groups or clusters of observations that are homogeneous and separated from other groups. Clusters are identified by the assessment of the relative distances between points. Clustering means that some points (or observations) of the data are in some sense closer to each other than some other points.
+
+Classifcation starts with calculating interindividual distance matrix or similarity matrix. There are many ways to calculate distances or similarities between pairs of individuals, here we use Euclidean distance. After calculating distances, we proceed to run the k-means algorithm.
+
+K-means clustering is a unsupervised method, that assigns observations to groups or clusters based on similarity of the objects
+
+
+```{r error=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=10}
+
+data("Boston") #load the data again
+
+boston_scaled_2 <- scale(Boston) # scaling variables
+boston_scaled_2<-as.data.frame(boston_scaled_2) # change the object to data frame
+
+dist_eu <- dist(boston_scaled_2) # euclidean distance matrix
+
+summary(dist_eu) # look at the summary of the distances
+
+# k-means clustering
+km <- kmeans(boston_scaled_2, centers = 3) #centers = number of clusters
+
+# plot the Boston dataset with clusters
+pairs(boston_scaled_2, col = km$cluster) 
+```
+
+
+Summary table of eucledian distances show the min, 1st quartile, median, mean, 3rd quartile and maximum of the distances between two points.
+
+Let's determine the optimal number of clusters
+
+When plotting the number of clusters and the total WCSS, the optimal number of clusters is when the total WCSS drops radically
+
+```{r error=FALSE, message=FALSE, warning=FALSE, fig.width=10, fig.height=10}
+
+#K-means might produce different results every time, because it randomly assigns the initial cluster centers. The function `set.seed()` can be used to deal with that.
+set.seed(123)
+
+# determine the number of clusters
+k_max <- 10
+
+# calculate the total within sum of squares
+twcss <- sapply(1:k_max, function(k){kmeans(boston_scaled_2, k)$tot.withinss})
+
+# visualize the results
+qplot(x = 1:k_max, y = twcss, geom = 'line')
+
+
+```
+
+
+The plot above represents the variance within the clusters. It decreases as k increases, but it can be seen a bend at k = 6. This bend indicates that additional clusters beyond the sixth have little value. In the next section, we’ll classify the observations into 6 clusters.
+ (more info: https://www.datanovia.com/en/lessons/k-means-clustering-in-r-algorith-and-practical-examples/)
+
+```{r error=FALSE, message=FALSE, warning=FALSE,  fig.width=10, fig.height=10}
+
+km <- kmeans(boston_scaled_2, centers = 6) # k-means clustering
+
+print(km)
+
+```
+
+
+* The k-means printed output displays:
+  + sizes of the clusters
+  + the cluster means or centers: a matrix, which rows are cluster number (1 to 6) and columns are variables
+  + the clustering vector: A vector of integers (from 1:k) indicating the cluster to which each point is allocated
+
+Let's visualize the clusters with the pairs() function:
+
+```{r error=FALSE, message=FALSE, warning=FALSE,  fig.width=10, fig.height=10}
+
+pairs(boston_scaled_2, col = km$cluster)
+
+```
+
+* Here are some observations of the clustering visualization:
+  + better accessibility to radial highways and property-tax rate increase seem to cluster together with high crime rate
+  + lower median value of owner-occupied homes are classified to the same clusters with increasing crime rates
+  + Variables industry and nitrogen form at least 3 clear clusters together.
+  + Low status of the population is clustered with reduced median value of owner-occupied homes.
+
+
+##### Bonus task:
+
+```{r error=FALSE, message=FALSE, warning=FALSE,  fig.width=10, fig.height=10}
+
+data("Boston")
+boston_scaled_bonus <- scale(Boston) # scaling
+boston_scaled_bonus<-as.data.frame(boston_scaled_bonus) # change the object to data frame
+
+#clusters: km$cluster
+
+#LDA
+set.seed(123)
+lda.fit_bonus <- lda(km$cluster~., data = boston_scaled_bonus)
+
+lda.fit_bonus # print the lda.fit object
+
+# the function for lda biplot arrows
+lda.arrows <- function(x, myscale = 1, arrow_heads = 0.1, color = "red", tex = 0.75, choices = c(1,2)){
+  heads <- coef(x)
+  graphics::arrows(x0 = 0, y0 = 0, 
+                   x1 = myscale * heads[,choices[1]], 
+                   y1 = myscale * heads[,choices[2]], col=color, length = arrow_heads)
+  text(myscale * heads[,choices], labels = row.names(heads), 
+       cex = tex, col=color, pos=3)
+}
+
+# target classes as numeric
+classes_bonus <- as.numeric(km$cluster)
+
+# plot the lda results
+plot(lda.fit_bonus, dimen = 2, col=classes_bonus, pch = classes_bonus)
+lda.arrows(lda.fit_bonus, myscale = 1.2)
+
+```
+
+
+The most influential linear separators for the clusters are chas, rad & indus.
+
+##### Super-Bonus:
+
+```{r error=FALSE, message=FALSE, warning=FALSE,  fig.width=10, fig.height=10}
+
+model_predictors <- dplyr::select(train, -crime)
+
+# check the dimensions
+dim(model_predictors)
+dim(lda.fit$scaling)
+
+# matrix multiplication
+matrix_product <- as.matrix(model_predictors) %*% lda.fit$scaling
+matrix_product <- as.data.frame(matrix_product)
+
+
+```
