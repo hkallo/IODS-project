@@ -1,7 +1,7 @@
 # Assignment 4: Clustering & Classification
 
 #### Name: Henna Kallo
-#### Date: 23.11.2023
+#### Date: 26.11.2023
 
 #### In this exercise we learn data clustering and classification
 
