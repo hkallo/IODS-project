@@ -353,5 +353,11 @@ dim(lda.fit$scaling)
 matrix_product <- as.matrix(model_predictors) %*% lda.fit$scaling
 matrix_product <- as.data.frame(matrix_product)
 
+plotly::plot_ly(x = matrix_product$LD1, y = matrix_product$LD2, z = matrix_product$LD3, type= 'scatter3d', mode='markers', color= train$crime)
 
 ```
+
+
+The 3D plot helps with the separation of clusters that are overlapping on two axes.
+
+###FIN###
