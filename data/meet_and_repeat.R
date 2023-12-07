@@ -53,6 +53,7 @@ getwd()
 setwd("C:/Users/Henna/Desktop/IODS/IODS-project/data")
 
 write_csv(BPRSL, file="bprsl.csv") #save data
+write_csv(BPRS, file="bprs.csv") #save data
 
 ######
 
@@ -91,7 +92,12 @@ summary(RATS); summary(RATSL)  #summaries of the varibales
   # However, when summaries are taken from the long and wide formats, the wide format gives summaries of Weight values by weeks (WD), whereas summary of the long format summarizes the whole dataset, which might be misleading in this type of longitudinal data.
   # Neither of these summaries analyze the groups separately.
 
+
+getwd()
+setwd("C:/Users/Henna/Desktop/IODS/IODS-project/data")
+
 write_csv(RATSL, file="ratsl.csv") #save data
+write_csv(RATS, file="rats.csv") #save data
 
 
 ###WRANGLING FIN###
